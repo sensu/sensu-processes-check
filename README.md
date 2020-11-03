@@ -149,7 +149,7 @@ The comparison is always evaluated as number of matching processes found
 Search criteria:
 * At least 1 process named `ssh-agent` and report critical (2) if not found (defaults for `number`, `comparison`, `severity`, and `full_cmdline`)
 * At least 2 processes named  `webapp1` and report warning (1) if not found (defaults for `comparison` and `full_cmdline`)
-* Only 1 process with `eventmonitor` as part of the command line and report warning (1) if not found (defaults for `number` and `comparison`)
+* Only 1 process with `eventmonitor` as part of the command line and report warning (1) if not found (defaults for `number`)
 
 ```
 sensu-processes-check -s '["search_string": "ssh-agent"}, {"number": 2, "severity": 1, "search_string": "webapp1"}, {"full_cmdline": true, "comparison": "==", "severity": 1, "search_string": "eventmonitor"}]'
