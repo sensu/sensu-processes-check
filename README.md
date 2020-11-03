@@ -163,7 +163,7 @@ Status - OK
 
 The process will exit with the highest severity encountered across all searches.
 Given the same search criteria as the example above, if zero (0) instances of
-"ssh-agent" were found, and one (1) instances of "webapp1" were found, the
+"ssh-agent" were found, and only one (1) instance of "webapp1" were found, the
 output would like similar to the below and the exit status would be 2
 (critical).
 
