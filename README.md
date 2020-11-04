@@ -158,7 +158,7 @@ Search criteria:
 sensu-processes-check -s '["search_string": "ssh-agent"}, {"number": 2, "severity": 1, "search_string": "webapp1"}, {"full_cmdline": true, "comparison": "==", "severity": 1, "search_string": "eventmonitor"}]'
 OK       | 1 >= 1 (found >= required) evaluated true for "ssh-agent"
 OK       | 3 >= 2 (found >= required) evaluated true for "webapp1"
-OK       | 1 == 1 (found >= required) evaluated true for "eventmonitor"
+OK       | 1 == 1 (found == required) evaluated true for "eventmonitor"
 Status - OK
 ```
 
@@ -174,7 +174,7 @@ output would like similar to the below and the exit status would be 2
 sensu-processes-check -s '["search_string": "ssh-agent"}, {"number": 2, "severity": 1, "search_string": "webapp1"}, {"full_cmdline": true, "comparison": "==", "severity": 1, "search_string": "eventmonitor"}]'
 CRITICAL | 0 >= 1 (found >= required) evaluated false for "ssh-agent"
 WARNING  | 1 >= 2 (found >= required) evaluated false for "webapp1"
-OK       | 1 == 1 (found >= required) evaluated true for "eventmonitor"
+OK       | 1 == 1 (found == required) evaluated true for "eventmonitor"
 Status - CRITICAL
 ```
 
