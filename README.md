@@ -47,7 +47,10 @@ metadata:
   name: sensu-processes-check
   namespace: default
 spec:
-  command: sensu-processes-check --search '[{"search_string": "sshd"}]'
+  command: >
+    sensu-processes-check
+    --search
+    '[{"search_string": "sshd"}]'
   subscriptions:
   - system
   runtime_assets:
