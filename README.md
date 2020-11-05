@@ -1,6 +1,6 @@
-[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/nixwiz/sensu-processes-check)
-![Go Test](https://github.com/nixwiz/sensu-processes-check/workflows/Go%20Test/badge.svg)
-![goreleaser](https://github.com/nixwiz/sensu-processes-check/workflows/goreleaser/badge.svg)
+[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/sensu/sensu-processes-check)
+![Go Test](https://github.com/sensu/sensu-processes-check/workflows/Go%20Test/badge.svg)
+![goreleaser](https://github.com/sensu/sensu-processes-check/workflows/goreleaser/badge.svg)
 
 # Sensu Processes Check
 
@@ -32,10 +32,10 @@ consider doing so! If you're using sensuctl 5.13 with Sensu Backend 5.13 or late
 following command to add the asset:
 
 ```
-sensuctl asset add nixwiz/sensu-processes-check
+sensuctl asset add sensu/sensu-processes-check
 ```
 
-If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/nixwiz/sensu-processes-check].
+If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/sensu/sensu-processes-check].
 
 ### Check definition
 
@@ -54,7 +54,7 @@ spec:
   subscriptions:
   - system
   runtime_assets:
-  - nixwiz/sensu-processes-check
+  - sensu/sensu-processes-check
 ```
 
 ## Usage examples

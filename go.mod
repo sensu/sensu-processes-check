@@ -1,4 +1,4 @@
-module github.com/nixwiz/sensu-processes-check
+module github.com/sensu/sensu-processes-check
 
 go 1.14
 
