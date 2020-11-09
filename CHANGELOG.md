@@ -7,6 +7,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.2.0] - 2020-11-09
+
 ### Changed
 - Add suppot for suppressing OK output lines
 - Updated README to include information on annotations and check token substitution
