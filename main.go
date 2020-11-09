@@ -88,6 +88,10 @@ func executeCheck(event *types.Event) (int, error) {
 		name, _ := process.Name()
 		cmdline, _ := process.Cmdline()
 		for _, search := range searches {
+			// skip empty search string, should this be tunable?
+			if len(search.SearchString) == 0 {
+				continue
+			}
 			if !search.FullCmdLine && name == search.SearchString {
 				found[search.SearchString]++
 				break
@@ -102,6 +106,10 @@ func executeCheck(event *types.Event) (int, error) {
 
 	overallSeverity := 0
 	for _, search := range searches {
+		// skip empty search string, should this be tunable?
+		if len(search.SearchString) == 0 {
+			continue
+		}
 		thisSeverity := 0
 		strExpr := fmt.Sprintf("%d %s %d", found[search.SearchString], search.Comparison, search.Number)
 		expression, err := govaluate.NewEvaluableExpression(strExpr)
