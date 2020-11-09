@@ -12,6 +12,8 @@
 - [Usage examples](#usage-examples)
   - [Help output](#help-output)
   - [Search string details](#search-string-details)
+  - [Exit severity](#exit-severity)
+  - [Annotations](#annotations)
 - [Installation from source](#installation-from-source)
 - [Contributing](#contributing)
 
@@ -73,8 +75,9 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
-  -h, --help            help for sensu-processes-check
-  -s, --search string   An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"
+  -h, --help                 help for sensu-processes-check
+  -s, --search string        An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"
+  -S, --suppress-ok-output   Aside from overal status, only output failures
 
 Use "sensu-processes-check [command] --help" for more information about a command.
 ```
@@ -178,6 +181,55 @@ OK       | 1 == 1 (found == required) evaluated true for "eventmonitor"
 Status - CRITICAL
 ```
 
+### Annotations
+
+The arguments for this check are tunable on a per entity basis.  The annotations
+keyspace for this check is `sensu.io/plugins/sensu-processes-check/config`.
+Here is how you would set the search string for an entity to override the
+existing check definition:
+
+```yaml
+type: Entity
+api_version: core/v2
+metadata:
+  annotations:
+    sensu.io/plugins/sensu-processes-check/config/search: '[{"search_string":"qmgr"},{"search_string":"pickup"},{"search_string":"chronyd"}]'
+[...remaining lines deleted]
+```
+
+It should be noted that annotations completely override the existing argument.
+Should you want to use [check token substitution][3] with an annotation, you
+will need to use a different annotation key.  Also, when using check token
+substitution it becomes necessary to escape the JSON that makes up the
+argument to the `--search` option both for the command definition and in the
+annotation itself.  The examples below show the necessary changes.
+
+Here is the relevant portion of the check definition:
+
+```yaml
+type: Check
+api_version: core/v2
+metadata:
+  name: processes-check
+  namespace: default
+spec:
+  check_hooks: null
+  command: |
+    sensu-processes-check --search "{{ .annotations.sensu_processes_check_search | default `[{\"search_string\": \"qmgr\"}, {\"search_string\": \"pickup\"}]` }}"
+[...remaining lines deleted]
+```
+
+And here is the relevant portion of the entity annotation:
+
+```yaml
+type: Entity
+api_version: core/v2
+metadata:
+  annotations:
+    sensu_processes_check_search: '[{\"search_string\":\"qmgr\"},{\"search_string\":\"pickup\"},{\"search_string\":\"gssproxy\"}]'
+[...remaining lines deleted]
+```
+
 ## Installation from source
 
 The preferred way of installing and deploying this plugin is to use it as an Asset. If you would
@@ -196,3 +248,4 @@ For more information about contributing to this plugin, see [Contributing][1].
 
 [1]: https://docs.sensu.io/sensu-go/latest/reference/checks/
 [2]: https://docs.sensu.io/sensu-go/latest/reference/assets/
+[3]: https://docs.sensu.io/sensu-go/latest/observability-pipeline/observe-schedule/checks/#check-token-substitution

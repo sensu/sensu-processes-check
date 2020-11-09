@@ -24,7 +24,8 @@ type Search struct {
 // Config represents the check plugin config.
 type Config struct {
 	sensu.PluginConfig
-	Search string
+	Search           string
+	SuppressOKOutput bool
 }
 
 var (
@@ -46,6 +47,15 @@ var (
 			Usage:     `An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"`,
 			Value:     &plugin.Search,
 		},
+		{
+			Path:      "suppress-ok-output",
+			Env:       "",
+			Argument:  "suppress-ok-output",
+			Shorthand: "S",
+			Default:   false,
+			Usage:     "Aside from overal status, only output failures",
+			Value:     &plugin.SuppressOKOutput,
+		},
 	}
 )
 
@@ -56,7 +66,7 @@ func main() {
 
 func checkArgs(event *types.Event) (int, error) {
 	if len(plugin.Search) == 0 {
-		return sensu.CheckStateWarning, fmt.Errorf("--search is required")
+		return sensu.CheckStateUnknown, fmt.Errorf("--search is required")
 	}
 	return sensu.CheckStateOK, nil
 }
@@ -78,6 +88,10 @@ func executeCheck(event *types.Event) (int, error) {
 		name, _ := process.Name()
 		cmdline, _ := process.Cmdline()
 		for _, search := range searches {
+			// skip empty search string, should this be tunable?
+			if len(search.SearchString) == 0 {
+				continue
+			}
 			if !search.FullCmdLine && name == search.SearchString {
 				found[search.SearchString]++
 				break
@@ -90,9 +104,13 @@ func executeCheck(event *types.Event) (int, error) {
 		}
 	}
 
-	sev := 0
+	overallSeverity := 0
 	for _, search := range searches {
-		mySev := 0
+		// skip empty search string, should this be tunable?
+		if len(search.SearchString) == 0 {
+			continue
+		}
+		thisSeverity := 0
 		strExpr := fmt.Sprintf("%d %s %d", found[search.SearchString], search.Comparison, search.Number)
 		expression, err := govaluate.NewEvaluableExpression(strExpr)
 		if err != nil {
@@ -103,17 +121,21 @@ func executeCheck(event *types.Event) (int, error) {
 			return sensu.CheckStateCritical, fmt.Errorf("Unable to evalute expression %s: %v", strExpr, err)
 		}
 
-		if !result.(bool) && sev < search.Severity {
-			sev = search.Severity
-			mySev = search.Severity
+		if !result.(bool) && overallSeverity < search.Severity {
+			overallSeverity = search.Severity
+			thisSeverity = search.Severity
 		} else if !result.(bool) {
-			mySev = search.Severity
+			thisSeverity = search.Severity
 		}
-		// Add a --verbose option for this? Or only report failures in the conditional above?
-		fmt.Printf("%-8s | %d %s %d (found %s required) evaluated %v for %q\n", mapSeverity(mySev), found[search.SearchString], search.Comparison, search.Number, search.Comparison, result.(bool), search.SearchString)
+
+		if (!plugin.SuppressOKOutput && thisSeverity == 0) || thisSeverity > 0 {
+			fmt.Printf("%-8s | %d %s %d (found %s required) evaluated %v for %q\n", mapSeverity(thisSeverity), found[search.SearchString], search.Comparison, search.Number, search.Comparison, result.(bool), search.SearchString)
+		}
+
 	}
-	fmt.Printf("Status - %s\n", mapSeverity(sev))
-	return sev, nil
+
+	fmt.Printf("Status - %s\n", mapSeverity(overallSeverity))
+	return overallSeverity, nil
 }
 
 func parseSearches(searchJSON string) ([]Search, error) {
@@ -143,9 +165,9 @@ func mapSeverity(sev int) string {
 func (s *Search) UnmarshalJSON(data []byte) error {
 	type searchAlias Search
 	search := &searchAlias{
-		Number: 1,
-		Severity: 2,
-		Comparison: ">=",
+		Number:       1,
+		Severity:     2,
+		Comparison:   ">=",
 		SearchString: "",
 	}
 
@@ -154,4 +176,3 @@ func (s *Search) UnmarshalJSON(data []byte) error {
 	*s = Search(*search)
 	return nil
 }
-

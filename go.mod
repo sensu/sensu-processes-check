@@ -6,7 +6,6 @@ require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
-	github.com/mitchellh/go-ps v1.0.0
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/sensu-community/sensu-plugin-sdk v0.11.0
 	github.com/sensu/sensu-go/api/core/v2 v2.3.0
