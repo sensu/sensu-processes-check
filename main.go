@@ -8,7 +8,7 @@ import (
 
 	"github.com/Knetic/govaluate"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
-	"github.com/sensu/sensu-go/types"
+	corev2 "github.com/sensu/sensu-go/api/core/v2"
 	"github.com/shirou/gopsutil/process"
 )
 
@@ -64,14 +64,14 @@ func main() {
 	check.Execute()
 }
 
-func checkArgs(event *types.Event) (int, error) {
+func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.Search) == 0 {
 		return sensu.CheckStateUnknown, fmt.Errorf("--search is required")
 	}
 	return sensu.CheckStateOK, nil
 }
 
-func executeCheck(event *types.Event) (int, error) {
+func executeCheck(event *corev2.Event) (int, error) {
 	found := make(map[string]int)
 	searches, err := parseSearches(plugin.Search)
 	if err != nil {

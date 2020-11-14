@@ -9,7 +9,6 @@ require (
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/sensu-community/sensu-plugin-sdk v0.11.0
 	github.com/sensu/sensu-go/api/core/v2 v2.3.0
-	github.com/sensu/sensu-go/types v0.3.0
 	github.com/shirou/gopsutil v3.20.10+incompatible
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

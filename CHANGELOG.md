@@ -7,6 +7,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Changed
+- Changed types import to corev2
+
 ## [0.2.0] - 2020-11-09
 
 ### Changed
