@@ -22,7 +22,7 @@
 The Sensu Processes Check is a [Sensu Check][1] that searches for certain
 running processes (or other strings in a command line).  It can search for
 multiple processes and, on a per-string basis, set the number of processes
-expected, severity if the number of processes is not met, and whether not
+expected, severity if the number of processes is not met, and whether or not
 to search the full command line for the requested string.
 
 ## Configuration
