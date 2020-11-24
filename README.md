@@ -37,7 +37,7 @@ following command to add the asset:
 sensuctl asset add sensu/sensu-processes-check
 ```
 
-If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][https://bonsai.sensu.io/assets/sensu/sensu-processes-check].
+If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][4].
 
 ### Check definition
 
@@ -249,3 +249,4 @@ For more information about contributing to this plugin, see [Contributing][1].
 [1]: https://docs.sensu.io/sensu-go/latest/reference/checks/
 [2]: https://docs.sensu.io/sensu-go/latest/reference/assets/
 [3]: https://docs.sensu.io/sensu-go/latest/observability-pipeline/observe-schedule/checks/#check-token-substitution
+[4]: https://bonsai.sensu.io/assets/sensu/sensu-processes-check
