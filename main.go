@@ -173,6 +173,11 @@ func executeCheck(event *corev2.Event) (int, error) {
 		//var totalMetrics []string
 		//totalTags := make(map[string][]*process.Process)
 		for _, p := range processes {
+			var fval32 float32
+			var fval64 float64
+			//var ival32 int32
+			var ival64 int64
+
 			name, _ := p.Name()
 			procstatTags := make(map[string]string)
 			//Set the labels for the metric
@@ -183,13 +188,21 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 			//cpu_usage metric
 			procstatTags["field"] = "cpu_usage"
-			val64, _ := p.CPUPercent()
-			gauge := newGaugeMetric(procstatTags, float64(val64), nowMS)
+			procstatTags["units"] = "percent"
+			fval64, _ = p.CPUPercent()
+			gauge := newGaugeMetric(procstatTags, float64(fval64), nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			//memory_usage metric
 			procstatTags["field"] = "memory_usage"
-			val32, _ := p.MemoryPercent()
-			gauge = newGaugeMetric(procstatTags, float64(val32), nowMS)
+			procstatTags["units"] = "percent"
+			fval32, _ = p.MemoryPercent()
+			gauge = newGaugeMetric(procstatTags, float64(fval32), nowMS)
+			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			//created_at metric
+			procstatTags["field"] = "created_at"
+			procstatTags["units"] = "nanoseconds"
+			ival64, _ = p.CreateTime()
+			gauge = newGaugeMetric(procstatTags, float64(ival64)*1e6, nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 
 		}
@@ -229,6 +242,27 @@ func newGaugeMetric(tags map[string]string, value float64, timestampMS int64) *d
 		TimestampMs: &timestampMS,
 	}
 	return gauge
+}
+func newCounterMetric(tags map[string]string, value float64, timestampMS int64) *dto.Metric {
+	labels := make([]*dto.LabelPair, 0)
+	keys := make([]string, 0, len(tags))
+	for k := range tags {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		name := fmt.Sprintf("%v", key)
+		val := fmt.Sprintf("%v", tags[key])
+		labels = append(labels, &dto.LabelPair{Name: &name, Value: &val})
+	}
+	counter := &dto.Metric{
+		Label: labels,
+		Counter: &dto.Counter{
+			Value: &value,
+		},
+		TimestampMs: &timestampMS,
+	}
+	return counter
 }
 func newMetricFamily(name, help string, metricType dto.MetricType) *dto.MetricFamily {
 	return &dto.MetricFamily{
