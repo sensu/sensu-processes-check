@@ -22,7 +22,7 @@ func TestCheckArgs(t *testing.T) {
 	assert := assert.New(t)
 	event := corev2.FixtureEvent("entity1", "check1")
 	_, err := checkArgs(event)
-	assert.Error(err)
+	assert.NoError(err)
 
 	plugin.Search = `[{"full_cmdline": true, "number": 1, "severity": 1, "search_string": "eventmonitor"}, {"number": 1, "severity": 2, "search_string": "ssh-agent"}, {"number": 2, "severity": 1, "search_string": "non-existent"}]`
 	_, err = checkArgs(event)
