@@ -239,7 +239,29 @@ func executeCheck(event *corev2.Event) (int, error) {
 				gauge = newGaugeMetric(procstatTags, float64(iostats.WriteBytes), nowMS)
 				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			}
-
+			faults, err := p.PageFaults()
+			if err == nil && faults != nil {
+				//major_fault metric
+				procstatTags["field"] = "major_faults"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(faults.MajorFaults), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//minor_fault metric
+				procstatTags["field"] = "minor_faults"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(faults.MinorFaults), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//child_major_fault metric
+				procstatTags["field"] = "child_major_faults"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(faults.ChildMajorFaults), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//child_minor_fault metric
+				procstatTags["field"] = "child_minor_faults"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(faults.ChildMinorFaults), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			}
 		}
 	}
 
