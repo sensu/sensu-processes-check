@@ -216,6 +216,12 @@ func executeCheck(event *corev2.Event) (int, error) {
 			ival32, _ = p.NumFDs()
 			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			//num_threads metric
+			procstatTags["field"] = "num_threads"
+			procstatTags["units"] = "count"
+			ival32, _ = p.NumThreads()
+			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
+			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			iostats, err := p.IOCounters()
 			if err == nil && iostats != nil {
 				//read_count metric
