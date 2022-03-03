@@ -262,6 +262,19 @@ func executeCheck(event *corev2.Event) (int, error) {
 				gauge = newGaugeMetric(procstatTags, float64(faults.ChildMinorFaults), nowMS)
 				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			}
+			switches, err := p.NumCtxSwitches()
+			if err == nil && switches != nil {
+				//involuntary_context_switches
+				procstatTags["field"] = "involuntary_context_switches"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(switches.Involuntary), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//voluntary_context_switches
+				procstatTags["field"] = "voluntary_context_switches"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(switches.Voluntary), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			}
 		}
 	}
 
