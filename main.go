@@ -178,11 +178,17 @@ func executeCheck(event *corev2.Event) (int, error) {
 			var ival32 int32
 			var ival64 int64
 
-			name, _ := p.Name()
+			name, err := p.Name()
+			if err != nil {
+				continue
+			}
 			procstatTags := make(map[string]string)
 			//Set the labels for the metric
+			hostname, err := os.Hostname()
+			if err == nil {
+				procstatTags["host.name"] = hostname
+			}
 			procstatTags["field"] = "none"
-			procstatTags["host.name"], _ = os.Hostname()
 			procstatTags["search_string"] = searchStr
 			procstatTags["process.executable.name"] = name
 
@@ -210,6 +216,29 @@ func executeCheck(event *corev2.Event) (int, error) {
 			ival32, _ = p.NumFDs()
 			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			iostats, err := p.IOCounters()
+			if err == nil && iostats != nil {
+				//read_count metric
+				procstatTags["field"] = "read_count"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(iostats.ReadCount), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//read_bytes metric
+				procstatTags["field"] = "read_bytes"
+				procstatTags["units"] = "bytes"
+				gauge = newGaugeMetric(procstatTags, float64(iostats.ReadBytes), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//write_count metric
+				procstatTags["field"] = "write_count"
+				procstatTags["units"] = "count"
+				gauge = newGaugeMetric(procstatTags, float64(iostats.WriteCount), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				//write_bytes metric
+				procstatTags["field"] = "write_bytes"
+				procstatTags["units"] = "bytes"
+				gauge = newGaugeMetric(procstatTags, float64(iostats.WriteBytes), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			}
 
 		}
 	}
