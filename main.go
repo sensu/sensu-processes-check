@@ -175,7 +175,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 		for _, p := range processes {
 			var fval32 float32
 			var fval64 float64
-			//var ival32 int32
+			var ival32 int32
 			var ival64 int64
 
 			name, _ := p.Name()
@@ -203,6 +203,12 @@ func executeCheck(event *corev2.Event) (int, error) {
 			procstatTags["units"] = "nanoseconds"
 			ival64, _ = p.CreateTime()
 			gauge = newGaugeMetric(procstatTags, float64(ival64)*1e6, nowMS)
+			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			//num_fds metric
+			procstatTags["field"] = "num_fds"
+			procstatTags["units"] = "count"
+			ival32, _ = p.NumFDs()
+			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 
 		}
