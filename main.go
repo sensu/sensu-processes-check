@@ -170,6 +170,19 @@ func executeCheck(event *corev2.Event) (int, error) {
 	procstatFamily = newMetricFamily("procstat", "SumoLogic Compatibility", dto.MetricType_GAUGE)
 	families = append(families, procstatFamily)
 	totalProcesses := int64(0)
+	totalThreads := int64(0)
+	totalStatusMap := map[string]int64{
+		"wait":       0,
+		"blocked":    0,
+		"zombies":    0,
+		"dead":       0,
+		"stopped":    0,
+		"running":    0,
+		"sleeping":   0,
+		"idle":       0,
+		"unknown":    0,
+		"unexpected": 0,
+	}
 	totalTags := make(map[string]string)
 	hostname, err := os.Hostname()
 	if err == nil {
@@ -177,8 +190,6 @@ func executeCheck(event *corev2.Event) (int, error) {
 	}
 	for searchStr, processes := range found {
 		totalProcesses += int64(len(processes))
-		//var totalMetrics []string
-		//totalTags := make(map[string][]*process.Process)
 		for _, p := range processes {
 			var fval32 float32
 			var fval64 float64
@@ -188,6 +199,29 @@ func executeCheck(event *corev2.Event) (int, error) {
 			name, err := p.Name()
 			if err != nil {
 				continue
+			}
+			status, err := p.Status()
+			switch status[0] {
+			case 'W':
+				totalStatusMap["wait"] += 1
+			case 'U', 'D', 'L':
+				totalStatusMap["blocked"] += 1
+				// Also known as uninterruptible sleep or disk sleep
+			case 'Z':
+				totalStatusMap["zombies"] += 1
+			case 'X':
+				totalStatusMap["dead"] += 1
+			case 'T':
+				totalStatusMap["stopped"] += 1
+			case 'R':
+			case 'S':
+				totalStatusMap["sleeping"] += 1
+			case 'I':
+				totalStatusMap["idle"] += 1
+			case '?':
+				totalStatusMap["unknown"] += 1
+			default:
+				totalStatusMap["unexpected"] += 1
 			}
 			procstatTags := make(map[string]string)
 			//Set the labels for the metric
@@ -249,6 +283,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 			procstatTags["field"] = "num_threads"
 			procstatTags["units"] = "count"
 			ival32, _ = p.NumThreads()
+			totalThreads += int64(ival32)
 			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			iostats, err := p.IOCounters()
@@ -375,6 +410,16 @@ func executeCheck(event *corev2.Event) (int, error) {
 	totalTags["units"] = "count"
 	gauge := newGaugeMetric(totalTags, float64(totalProcesses), nowMS)
 	processesFamily.Metric = append(processesFamily.Metric, gauge)
+	totalTags["field"] = "total_threads"
+	totalTags["units"] = "count"
+	gauge = newGaugeMetric(totalTags, float64(totalThreads), nowMS)
+	processesFamily.Metric = append(processesFamily.Metric, gauge)
+	for status, count := range totalStatusMap {
+		totalTags["field"] = status
+		totalTags["units"] = "count"
+		gauge = newGaugeMetric(totalTags, float64(count), nowMS)
+		processesFamily.Metric = append(processesFamily.Metric, gauge)
+	}
 
 	var buf bytes.Buffer
 	for _, family := range families {
