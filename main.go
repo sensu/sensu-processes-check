@@ -172,6 +172,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 	totalProcesses := int64(0)
 	totalThreads := int64(0)
 	totalStatusMap := map[string]int64{
+		"parked":     0,
 		"wait":       0,
 		"blocked":    0,
 		"zombies":    0,
@@ -202,6 +203,8 @@ func executeCheck(event *corev2.Event) (int, error) {
 			}
 			status, err := p.Status()
 			switch status[0] {
+			case 'P':
+				totalStatusMap["parked"] += 1
 			case 'W':
 				totalStatusMap["wait"] += 1
 			case 'U', 'D', 'L':
@@ -214,6 +217,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 			case 'T':
 				totalStatusMap["stopped"] += 1
 			case 'R':
+				totalStatusMap["running"] += 1
 			case 'S':
 				totalStatusMap["sleeping"] += 1
 			case 'I':
