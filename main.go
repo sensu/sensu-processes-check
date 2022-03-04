@@ -68,15 +68,17 @@ var (
 			Usage:     "Do not alert based on search configuration",
 			Value:     &plugin.MetricsOnly,
 		},
-		{
-			Path:      "sumologic-compat",
-			Env:       "PROCESSES_CHECK_SUMOLOGIC_COMPAT",
-			Argument:  "sumologic-compat",
-			Shorthand: "",
-			Default:   false,
-			Usage:     "Add Sumo Logic compatible \"procstat\" metrics family",
-			Value:     &plugin.SumoLogicCompat,
-		},
+		/*
+			{
+				Path:      "sumologic-compat",
+				Env:       "PROCESSES_CHECK_SUMOLOGIC_COMPAT",
+				Argument:  "sumologic-compat",
+				Shorthand: "",
+				Default:   false,
+				Usage:     "Add Sumo Logic compatible \"procstat\" metrics family",
+				Value:     &plugin.SumoLogicCompat,
+			},
+		*/
 		{
 			Path:      "verbose",
 			Env:       "PROCESSES_CHECK_SUMOLOGIC_VERBOSE",

@@ -14,6 +14,7 @@
   - [Check definition](#check-definition)
 - [Usage examples](#usage-examples)
   - [Help output](#help-output)
+  - [Environment variables](#environment-variables)
   - [Search string details](#search-string-details)
   - [Exit severity](#exit-severity)
   - [Annotations](#annotations)
@@ -160,11 +161,23 @@ Available Commands:
 
 Flags:
   -h, --help                 help for sensu-processes-check
+      --metrics-only         Do not alert based on search configuration
   -s, --search string        An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"
   -S, --suppress-ok-output   Aside from overal status, only output failures
+  -v, --verbose              Verbose output
 
 Use "sensu-processes-check [command] --help" for more information about a command.
+
 ```
+
+### Environment variables
+
+| Argument             | Environment Variable               |
+|----------------------|------------------------------------|
+| --metrics-only       | PROCESSES_CHECK_METRICS_ONLY       |
+| --search             | PROCESSES_CHECK_SEARCH             |
+| --suppress-ok-output | PROCESSES_CHECK_SUPPRESS_OK_OUTPUT |
+| --verbose            | PROCESSES_CHECK_SUMOLOGIC_VERBOSE  |
 
 ### Search string details
 
