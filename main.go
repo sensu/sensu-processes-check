@@ -33,6 +33,7 @@ type Config struct {
 	SuppressOKOutput bool
 	SumoLogicCompat  bool
 	MetricsOnly      bool
+	Verbose          bool
 }
 
 var (
@@ -81,6 +82,15 @@ var (
 			Usage:     "Add Sumo Logic compatible \"procstat\" metrics family",
 			Value:     &plugin.SumoLogicCompat,
 		},
+		{
+			Path:      "verbose",
+			Env:       "PROCESSES_CHECK_SUMOLOGIC_VERBOSE",
+			Argument:  "verbose",
+			Shorthand: "v",
+			Default:   false,
+			Usage:     "Verbose output",
+			Value:     &plugin.Verbose,
+		},
 	}
 )
 
@@ -101,32 +111,47 @@ func executeCheck(event *corev2.Event) (int, error) {
 	}
 	myPid := os.Getpid()
 	processes, _ := process.Processes()
+
+	seenPids := make(map[int32]bool)
 	for _, p := range processes {
-		// Skip myself
-		if p.Pid == int32(myPid) {
-			continue
-		}
 		name, _ := p.Name()
 		cmdline, _ := p.Cmdline()
+		// Skip myself
+		if p.Pid == int32(myPid) {
+			if plugin.Verbose {
+				fmt.Printf("# Skipping this process: %v %v\n", name, cmdline)
+			}
+			continue
+		}
+		// Skip if this Pid has already been tabulated
+		if _, ok := seenPids[p.Pid]; ok {
+			if plugin.Verbose {
+				fmt.Printf("# Skipping duplicate process: %v %v\n", name, cmdline)
+			}
+			continue
+		} else {
+			seenPids[p.Pid] = true
+		}
 		if len(searches) == 0 {
+			// if not search configuration is provided, construct metrics for all processes as empty SearchString
 			found[""] = append(found[""], p)
-			// if not search configuration is provided, construct metrics for all processes
 		} else {
 			for _, search := range searches {
-				// skip duplicate search string to prevent duplicate counts
-				if len(found[search.SearchString]) > 0 {
-					continue
-				}
 				// skip empty search string, should this be tunable?
 				if len(search.SearchString) == 0 {
+					if plugin.Verbose {
+						fmt.Printf("# Found empty search: %+v\n", search)
+					}
 					continue
 				}
 				if !search.FullCmdLine && name == search.SearchString {
 					found[search.SearchString] = append(found[search.SearchString], p)
+					// break out of search loop if process matches : do not let process match multiple searches
 					break
 				} else if search.FullCmdLine {
 					if strings.Contains(cmdline, search.SearchString) {
 						found[search.SearchString] = append(found[search.SearchString], p)
+						// break out of search if process matches: do not let process match multiple searches
 						break
 					}
 				}
