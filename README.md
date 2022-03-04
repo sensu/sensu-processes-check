@@ -203,8 +203,19 @@ is running on a Linux server, the following output may be produced:
 
 ```
 sensu-processes-check -s '[{"search_string": "sshd"}]'
-OK       | 3 >= 1 (found >= required) evaluated true for "sshd"
-Status - OK
+# OK       | 3 >= 1 (found >= required) evaluated true for "sshd"
+# Status - OK
+
+# HELP procstat per-process metrics
+# TYPE procstat gauge
+
+...
+
+# HELP processes summary metrics
+# TYPE processes gauge
+processes{field="total",host.name="carbon",units="count"} 3 1646434587929
+...
+
 ```
 
 If you compare the output of `ps -e` and `ps -ef` you will see the 3 matches it
@@ -229,8 +240,19 @@ and set `search_string` to `/usr/sbin/sshd`.
 
 ```
 sensu-processes-check -s '[{"search_string": "/usr/sbin/sshd", "full_cmdline": true}]'
-OK       | 1 >= 1 (found >= required) evaluated true for "/usr/sbin/sshd"
-Status - OK
+# OK       | 1 >= 1 (found >= required) evaluated true for "/usr/sbin/sshd"
+# Status - OK
+
+# HELP procstat per-process metrics
+# TYPE procstat gauge
+
+...
+
+# HELP processes summary metrics
+# TYPE processes gauge
+processes{field="total",host.name="carbon",units="count"} 1 1646434588019
+...
+
 ```
 
 #### Supported comparisons

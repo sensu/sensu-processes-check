@@ -189,7 +189,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 			}
 
 		}
-		fmt.Printf("# Status - %s\n", mapSeverity(overallSeverity))
+		fmt.Printf("# Status - %s\n\n", mapSeverity(overallSeverity))
 	}
 	// Construct metrics
 	err = generateMetrics(found)

@@ -15,12 +15,12 @@ import (
 func generateMetrics(found map[string][]*process.Process) error {
 	totalFamilies := make([]*dto.MetricFamily, 0)
 	var processesFamily *dto.MetricFamily
-	processesFamily = newMetricFamily("processes", "SumoLogic Dashboard Compatible Cumulative Process Metrics", dto.MetricType_GAUGE)
+	processesFamily = newMetricFamily("processes", "summary metrics", dto.MetricType_GAUGE)
 	totalFamilies = append(totalFamilies, processesFamily)
 
 	statFamilies := make([]*dto.MetricFamily, 0)
 	var procstatFamily *dto.MetricFamily
-	procstatFamily = newMetricFamily("procstat", "SumoLogic Dashboard Compatible Per Process Metrics", dto.MetricType_GAUGE)
+	procstatFamily = newMetricFamily("procstat", "per-process metrics", dto.MetricType_GAUGE)
 	statFamilies = append(statFamilies, procstatFamily)
 
 	nowMS := time.Now().UnixMilli()
@@ -91,7 +91,7 @@ func generateMetrics(found map[string][]*process.Process) error {
 			metricTags["field"] = "none"
 			metricTags["search_string"] = searchStr
 			metricTags["process.executable.name"] = name
-			metricTags["process.executable.pid"] = string(p.Pid)
+			metricTags["process.executable.pid"] = fmt.Sprintf("%v", (p.Pid))
 
 			//cpu_usage metric
 			metricTags["field"] = "cpu_usage"
