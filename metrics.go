@@ -56,30 +56,32 @@ func generateMetrics(found map[string][]*process.Process) error {
 			}
 			status, err := p.Status()
 			if err != nil {
-				switch status[0] {
-				case 'P':
-					totalStatusMap["parked"] += 1
-				case 'W':
-					totalStatusMap["wait"] += 1
-				case 'U', 'D', 'L':
-					totalStatusMap["blocked"] += 1
-					// Also known as uninterruptible sleep or disk sleep
-				case 'Z':
-					totalStatusMap["zombies"] += 1
-				case 'X':
-					totalStatusMap["dead"] += 1
-				case 'T':
-					totalStatusMap["stopped"] += 1
-				case 'R':
-					totalStatusMap["running"] += 1
-				case 'S':
-					totalStatusMap["sleeping"] += 1
-				case 'I':
-					totalStatusMap["idle"] += 1
-				case '?':
-					totalStatusMap["unknown"] += 1
-				default:
-					totalStatusMap["other"] += 1
+				if len(status) > 0 {
+					switch status[0] {
+					case 'P':
+						totalStatusMap["parked"] += 1
+					case 'W':
+						totalStatusMap["wait"] += 1
+					case 'U', 'D', 'L':
+						totalStatusMap["blocked"] += 1
+						// Also known as uninterruptible sleep or disk sleep
+					case 'Z':
+						totalStatusMap["zombies"] += 1
+					case 'X':
+						totalStatusMap["dead"] += 1
+					case 'T':
+						totalStatusMap["stopped"] += 1
+					case 'R':
+						totalStatusMap["running"] += 1
+					case 'S':
+						totalStatusMap["sleeping"] += 1
+					case 'I':
+						totalStatusMap["idle"] += 1
+					case '?':
+						totalStatusMap["unknown"] += 1
+					default:
+						totalStatusMap["other"] += 1
+					}
 				}
 			}
 			metricTags := make(map[string]string)
