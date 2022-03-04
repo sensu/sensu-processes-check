@@ -164,10 +164,10 @@ func executeCheck(event *corev2.Event) (int, error) {
 	nowMS := time.Now().UnixMilli()
 	families := make([]*dto.MetricFamily, 0)
 	var processesFamily *dto.MetricFamily
-	processesFamily = newMetricFamily("processes", "SumoLogic Compatibility", dto.MetricType_GAUGE)
+	processesFamily = newMetricFamily("processes", "SumoLogic Dashboard Compatible Cumulative Process Metrics", dto.MetricType_GAUGE)
 	families = append(families, processesFamily)
 	var procstatFamily *dto.MetricFamily
-	procstatFamily = newMetricFamily("procstat", "SumoLogic Compatibility", dto.MetricType_GAUGE)
+	procstatFamily = newMetricFamily("procstat", "SumoLogic Dashboard Compatible Per Process Metrics", dto.MetricType_GAUGE)
 	families = append(families, procstatFamily)
 	totalProcesses := int64(0)
 	totalThreads := int64(0)
