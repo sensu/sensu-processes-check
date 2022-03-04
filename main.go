@@ -32,6 +32,7 @@ type Config struct {
 	Search           string
 	SuppressOKOutput bool
 	SumoLogicCompat  bool
+	MetricsOnly      bool
 }
 
 var (
@@ -46,7 +47,7 @@ var (
 	options = []*sensu.PluginConfigOption{
 		{
 			Path:      "search",
-			Env:       "",
+			Env:       "PROCESSES_CHECK_SEARCH",
 			Argument:  "search",
 			Shorthand: "s",
 			Default:   "",
@@ -61,6 +62,15 @@ var (
 			Default:   false,
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
+		},
+		{
+			Path:      "metrics-only",
+			Env:       "PROCESSES_CHECK_METRICS_ONLY",
+			Argument:  "metrics-only",
+			Shorthand: "",
+			Default:   false,
+			Usage:     "Do not alert based on search configuration",
+			Value:     &plugin.MetricsOnly,
 		},
 		{
 			Path:      "sumologic-compat",
@@ -80,9 +90,6 @@ func main() {
 }
 
 func checkArgs(event *corev2.Event) (int, error) {
-	//if len(plugin.Search) == 0 {
-	//	return sensu.CheckStateUnknown, fmt.Errorf("--search is required")
-	//}
 	return sensu.CheckStateOK, nil
 }
 
@@ -130,36 +137,38 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	// Construct alert severity
 	overallSeverity := 0
-	for _, search := range searches {
-		// skip empty search string, should this be tunable?
-		if len(search.SearchString) == 0 {
-			continue
-		}
-		thisSeverity := 0
-		strExpr := fmt.Sprintf("%d %s %d", len(found[search.SearchString]), search.Comparison, search.Number)
-		expression, err := govaluate.NewEvaluableExpression(strExpr)
-		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to create expression %s: %v", strExpr, err)
-		}
-		result, err := expression.Evaluate(nil)
-		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to evalute expression %s: %v", strExpr, err)
-		}
+	if !plugin.MetricsOnly {
 
-		if !result.(bool) && overallSeverity < search.Severity {
-			overallSeverity = search.Severity
-			thisSeverity = search.Severity
-		} else if !result.(bool) {
-			thisSeverity = search.Severity
-		}
+		for _, search := range searches {
+			// skip empty search string, should this be tunable?
+			if len(search.SearchString) == 0 {
+				continue
+			}
+			thisSeverity := 0
+			strExpr := fmt.Sprintf("%d %s %d", len(found[search.SearchString]), search.Comparison, search.Number)
+			expression, err := govaluate.NewEvaluableExpression(strExpr)
+			if err != nil {
+				return sensu.CheckStateCritical, fmt.Errorf("Unable to create expression %s: %v", strExpr, err)
+			}
+			result, err := expression.Evaluate(nil)
+			if err != nil {
+				return sensu.CheckStateCritical, fmt.Errorf("Unable to evalute expression %s: %v", strExpr, err)
+			}
 
-		if (!plugin.SuppressOKOutput && thisSeverity == 0) || thisSeverity > 0 {
-			fmt.Printf("# %-8s | %d %s %d (found %s required) evaluated %v for %q\n", mapSeverity(thisSeverity), len(found[search.SearchString]), search.Comparison, search.Number, search.Comparison, result.(bool), search.SearchString)
-		}
+			if !result.(bool) && overallSeverity < search.Severity {
+				overallSeverity = search.Severity
+				thisSeverity = search.Severity
+			} else if !result.(bool) {
+				thisSeverity = search.Severity
+			}
 
+			if (!plugin.SuppressOKOutput && thisSeverity == 0) || thisSeverity > 0 {
+				fmt.Printf("# %-8s | %d %s %d (found %s required) evaluated %v for %q\n", mapSeverity(thisSeverity), len(found[search.SearchString]), search.Comparison, search.Number, search.Comparison, result.(bool), search.SearchString)
+			}
+
+		}
+		fmt.Printf("# Status - %s\n", mapSeverity(overallSeverity))
 	}
-	fmt.Printf("# Status - %s\n", mapSeverity(overallSeverity))
-
 	// Construct metrics
 	nowMS := time.Now().UnixMilli()
 	families := make([]*dto.MetricFamily, 0)
@@ -281,14 +290,14 @@ func executeCheck(event *corev2.Event) (int, error) {
 			procstatTags["field"] = "num_fds"
 			procstatTags["units"] = "count"
 			ival32, _ = p.NumFDs()
-			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
+			gauge = newGaugeMetric(procstatTags, float64(ival32), nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			//num_threads metric
 			procstatTags["field"] = "num_threads"
 			procstatTags["units"] = "count"
 			ival32, _ = p.NumThreads()
 			totalThreads += int64(ival32)
-			gauge = newGaugeMetric(procstatTags, float64(ival32)*1e6, nowMS)
+			gauge = newGaugeMetric(procstatTags, float64(ival32), nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			iostats, err := p.IOCounters()
 			if err == nil && iostats != nil {
