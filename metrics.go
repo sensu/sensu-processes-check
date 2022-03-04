@@ -14,13 +14,11 @@ import (
 
 func generateMetrics(found map[string][]*process.Process) error {
 	totalFamilies := make([]*dto.MetricFamily, 0)
-	var processesFamily *dto.MetricFamily
-	processesFamily = newMetricFamily("processes", "summary metrics", dto.MetricType_GAUGE)
+	processesFamily := newMetricFamily("processes", "summary metrics", dto.MetricType_GAUGE)
 	totalFamilies = append(totalFamilies, processesFamily)
 
 	statFamilies := make([]*dto.MetricFamily, 0)
-	var procstatFamily *dto.MetricFamily
-	procstatFamily = newMetricFamily("procstat", "per-process metrics", dto.MetricType_GAUGE)
+	procstatFamily := newMetricFamily("procstat", "per-process metrics", dto.MetricType_GAUGE)
 	statFamilies = append(statFamilies, procstatFamily)
 
 	nowMS := time.Now().UnixMilli()
@@ -57,30 +55,32 @@ func generateMetrics(found map[string][]*process.Process) error {
 				continue
 			}
 			status, err := p.Status()
-			switch status[0] {
-			case 'P':
-				totalStatusMap["parked"] += 1
-			case 'W':
-				totalStatusMap["wait"] += 1
-			case 'U', 'D', 'L':
-				totalStatusMap["blocked"] += 1
-				// Also known as uninterruptible sleep or disk sleep
-			case 'Z':
-				totalStatusMap["zombies"] += 1
-			case 'X':
-				totalStatusMap["dead"] += 1
-			case 'T':
-				totalStatusMap["stopped"] += 1
-			case 'R':
-				totalStatusMap["running"] += 1
-			case 'S':
-				totalStatusMap["sleeping"] += 1
-			case 'I':
-				totalStatusMap["idle"] += 1
-			case '?':
-				totalStatusMap["unknown"] += 1
-			default:
-				totalStatusMap["other"] += 1
+			if err != nil {
+				switch status[0] {
+				case 'P':
+					totalStatusMap["parked"] += 1
+				case 'W':
+					totalStatusMap["wait"] += 1
+				case 'U', 'D', 'L':
+					totalStatusMap["blocked"] += 1
+					// Also known as uninterruptible sleep or disk sleep
+				case 'Z':
+					totalStatusMap["zombies"] += 1
+				case 'X':
+					totalStatusMap["dead"] += 1
+				case 'T':
+					totalStatusMap["stopped"] += 1
+				case 'R':
+					totalStatusMap["running"] += 1
+				case 'S':
+					totalStatusMap["sleeping"] += 1
+				case 'I':
+					totalStatusMap["idle"] += 1
+				case '?':
+					totalStatusMap["unknown"] += 1
+				default:
+					totalStatusMap["other"] += 1
+				}
 			}
 			metricTags := make(map[string]string)
 			//Set the labels for the metric
@@ -97,92 +97,92 @@ func generateMetrics(found map[string][]*process.Process) error {
 			metricTags["field"] = "cpu_usage"
 			metricTags["units"] = "percent"
 			fval64, _ = p.CPUPercent()
-			_, err = addGaugeMetric(statFamilies, metricTags, float64(fval64), nowMS)
+			addGaugeMetric(statFamilies, metricTags, float64(fval64), nowMS)
 			//memory_usage metric
 			metricTags["field"] = "memory_usage"
 			metricTags["units"] = "percent"
 			fval32, _ = p.MemoryPercent()
-			_, err = addGaugeMetric(statFamilies, metricTags, float64(fval32), nowMS)
+			addGaugeMetric(statFamilies, metricTags, float64(fval32), nowMS)
 			mem, err := p.MemoryInfo()
 			if err == nil {
 				metricTags["units"] = "bytes"
 				metricTags["field"] = "memory_rss"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(mem.RSS), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(mem.RSS), nowMS)
 				metricTags["field"] = "memory_vms"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(mem.VMS), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(mem.VMS), nowMS)
 				metricTags["field"] = "memory_swap"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(mem.Swap), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(mem.Swap), nowMS)
 				metricTags["field"] = "memory_data"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(mem.Data), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(mem.Data), nowMS)
 				metricTags["field"] = "memory_stack"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(mem.Stack), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(mem.Stack), nowMS)
 				metricTags["field"] = "memory_locked"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(mem.Locked), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(mem.Locked), nowMS)
 			}
 			//created_at metric
 			metricTags["field"] = "created_at"
 			metricTags["units"] = "nanoseconds"
 			ival64, _ = p.CreateTime()
-			_, err = addGaugeMetric(statFamilies, metricTags, float64(ival64)*1e6, nowMS)
+			addGaugeMetric(statFamilies, metricTags, float64(ival64)*1e6, nowMS)
 			//num_fds metric
 			metricTags["field"] = "num_fds"
 			metricTags["units"] = "count"
 			ival32, _ = p.NumFDs()
-			_, err = addGaugeMetric(statFamilies, metricTags, float64(ival32), nowMS)
+			addGaugeMetric(statFamilies, metricTags, float64(ival32), nowMS)
 			//num_threads metric
 			metricTags["field"] = "num_threads"
 			metricTags["units"] = "count"
 			ival32, _ = p.NumThreads()
 			totalThreads += int64(ival32)
-			_, err = addGaugeMetric(statFamilies, metricTags, float64(ival32), nowMS)
+			addGaugeMetric(statFamilies, metricTags, float64(ival32), nowMS)
 			iostats, err := p.IOCounters()
 			if err == nil && iostats != nil {
 				//read_count metric
 				metricTags["field"] = "read_count"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(iostats.ReadCount), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(iostats.ReadCount), nowMS)
 				//read_bytes metric
 				metricTags["field"] = "read_bytes"
 				metricTags["units"] = "bytes"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(iostats.ReadBytes), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(iostats.ReadBytes), nowMS)
 				//write_count metric
 				metricTags["field"] = "write_count"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(iostats.WriteCount), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(iostats.WriteCount), nowMS)
 				//write_bytes metric
 				metricTags["field"] = "write_bytes"
 				metricTags["units"] = "bytes"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(iostats.WriteBytes), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(iostats.WriteBytes), nowMS)
 			}
 			faults, err := p.PageFaults()
 			if err == nil && faults != nil {
 				//major_fault metric
 				metricTags["field"] = "major_faults"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(faults.MajorFaults), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(faults.MajorFaults), nowMS)
 				//minor_fault metric
 				metricTags["field"] = "minor_faults"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(faults.MinorFaults), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(faults.MinorFaults), nowMS)
 				//child_major_fault metric
 				metricTags["field"] = "child_major_faults"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(faults.ChildMajorFaults), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(faults.ChildMajorFaults), nowMS)
 				//child_minor_fault metric
 				metricTags["field"] = "child_minor_faults"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(faults.ChildMinorFaults), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(faults.ChildMinorFaults), nowMS)
 			}
 			switches, err := p.NumCtxSwitches()
 			if err == nil && switches != nil {
 				//involuntary_context_switches
 				metricTags["field"] = "involuntary_context_switches"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(switches.Involuntary), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(switches.Involuntary), nowMS)
 				//voluntary_context_switches
 				metricTags["field"] = "voluntary_context_switches"
 				metricTags["units"] = "count"
-				_, err = addGaugeMetric(statFamilies, metricTags, float64(switches.Voluntary), nowMS)
+				addGaugeMetric(statFamilies, metricTags, float64(switches.Voluntary), nowMS)
 			}
 			rlims, err := p.RlimitUsage(true)
 			if err == nil {
@@ -225,9 +225,9 @@ func generateMetrics(found map[string][]*process.Process) error {
 						continue
 					}
 					metricTags["field"] = "rlimit_" + name + "_soft"
-					_, err = addGaugeMetric(statFamilies, metricTags, float64(rlim.Soft), nowMS)
+					addGaugeMetric(statFamilies, metricTags, float64(rlim.Soft), nowMS)
 					metricTags["field"] = "rlimit_" + name + "_hard"
-					_, err = addGaugeMetric(statFamilies, metricTags, float64(rlim.Hard), nowMS)
+					addGaugeMetric(statFamilies, metricTags, float64(rlim.Hard), nowMS)
 
 					switch rlim.Resource {
 					case process.RLIMIT_CPU,
@@ -236,7 +236,7 @@ func generateMetrics(found map[string][]*process.Process) error {
 						process.RLIMIT_NICE,
 						process.RLIMIT_RTPRIO:
 						metricTags["field"] = name
-						_, err = addGaugeMetric(statFamilies, metricTags, float64(rlim.Used), nowMS)
+						addGaugeMetric(statFamilies, metricTags, float64(rlim.Used), nowMS)
 					}
 
 				}
@@ -246,14 +246,14 @@ func generateMetrics(found map[string][]*process.Process) error {
 	}
 	totalTags["field"] = "total"
 	totalTags["units"] = "count"
-	_, err = addGaugeMetric(totalFamilies, totalTags, float64(totalProcesses), nowMS)
+	addGaugeMetric(totalFamilies, totalTags, float64(totalProcesses), nowMS)
 	totalTags["field"] = "total_threads"
 	totalTags["units"] = "count"
-	_, err = addGaugeMetric(totalFamilies, totalTags, float64(totalThreads), nowMS)
+	addGaugeMetric(totalFamilies, totalTags, float64(totalThreads), nowMS)
 	for status, count := range totalStatusMap {
 		totalTags["field"] = status
 		totalTags["units"] = "count"
-		_, err = addGaugeMetric(totalFamilies, totalTags, float64(count), nowMS)
+		addGaugeMetric(totalFamilies, totalTags, float64(count), nowMS)
 	}
 	statFamilies = append(statFamilies, totalFamilies...)
 	var buf bytes.Buffer
@@ -281,7 +281,7 @@ func newMetricFamily(name, help string, metricType dto.MetricType) *dto.MetricFa
 	}
 }
 
-func addGaugeMetric(families []*dto.MetricFamily, tags map[string]string, value float64, timestampMS int64) (*dto.Metric, error) {
+func addGaugeMetric(families []*dto.MetricFamily, tags map[string]string, value float64, timestampMS int64) {
 	labels := make([]*dto.LabelPair, 0)
 	keys := make([]string, 0, len(tags))
 	for k := range tags {
@@ -303,5 +303,4 @@ func addGaugeMetric(families []*dto.MetricFamily, tags map[string]string, value 
 	for _, family := range families {
 		family.Metric = append(family.Metric, gauge)
 	}
-	return gauge, nil
 }
