@@ -191,6 +191,7 @@ func generateMetrics(found map[string][]*process.Process) error {
 					switch rlim.Resource {
 					case process.RLIMIT_CPU:
 						name = "cpu_time"
+						metricTags["units"] = "seconds"
 					case process.RLIMIT_DATA:
 						name = "memory_data"
 						metricTags["units"] = "bytes"
