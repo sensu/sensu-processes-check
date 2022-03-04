@@ -281,6 +281,48 @@ func executeCheck(event *corev2.Event) (int, error) {
 				gauge = newGaugeMetric(procstatTags, float64(switches.Voluntary), nowMS)
 				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
 			}
+			rlims, err := p.RlimitUsage(true)
+			if err == nil {
+				procstatTags["units"] = "N/A"
+				for _, rlim := range rlims {
+					var name string
+					switch rlim.Resource {
+					case process.RLIMIT_CPU:
+						name = "cpu_time"
+					case process.RLIMIT_DATA:
+						name = "memory_data"
+					case process.RLIMIT_STACK:
+						name = "memory_stack"
+					case process.RLIMIT_RSS:
+						name = "memory_rss"
+					case process.RLIMIT_NOFILE:
+						name = "num_fds"
+					case process.RLIMIT_MEMLOCK:
+						name = "memory_locked"
+					case process.RLIMIT_AS:
+						name = "memory_vms"
+					case process.RLIMIT_LOCKS:
+						name = "file_locks"
+					case process.RLIMIT_SIGPENDING:
+						name = "signals_pending"
+					case process.RLIMIT_NICE:
+						name = "nice_priority"
+					case process.RLIMIT_RTPRIO:
+						name = "realtime_priority"
+					default:
+						continue
+					}
+					procstatTags["field"] = "rlimit_" + name + "_soft"
+					gauge = newGaugeMetric(procstatTags, float64(rlim.Soft), nowMS)
+					procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+					procstatTags["field"] = "rlimit_" + name + "_hard"
+					gauge = newGaugeMetric(procstatTags, float64(rlim.Hard), nowMS)
+					procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+					procstatTags["field"] = name
+					gauge = newGaugeMetric(procstatTags, float64(rlim.Used), nowMS)
+					procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				}
+			}
 		}
 	}
 
