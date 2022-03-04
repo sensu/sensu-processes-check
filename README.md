@@ -6,7 +6,9 @@
 
 ## Table of Contents
 - [Overview](#overview)
-- [Output Metrics](#output-metrics)
+  - [Output Metrics](#output-metrics)
+    - [procstat](#procstat)
+    - [processes](#processes)
 - [Configuration](#configuration)
   - [Asset registration](#asset-registration)
   - [Check definition](#check-definition)
@@ -30,7 +32,7 @@ number of matching processes on a per-string basis.
 ### Output Metrics
 Metrics output conforms to the Prometheus exposition standard.
 
-### procstat
+#### procstat
 The `procstat` metric family provides individual per-process metrics for each process matching the configured search criteria.
 Each different per-process metric in this metric family is distinguished by the value of the label named `field`.
 Each metric is also labeled with `process.executable.name` and `process.executable.pid`  
