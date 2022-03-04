@@ -163,13 +163,20 @@ func executeCheck(event *corev2.Event) (int, error) {
 	// Construct metrics
 	nowMS := time.Now().UnixMilli()
 	families := make([]*dto.MetricFamily, 0)
-	//var processesFamily *dto.MetricFamily
-	//processesFamily = newMetricFamily("processes", "SumoLogic Compatibility", dto.MetricType_GAUGE)
-	//families = append(families, processesFamily)
+	var processesFamily *dto.MetricFamily
+	processesFamily = newMetricFamily("processes", "SumoLogic Compatibility", dto.MetricType_GAUGE)
+	families = append(families, processesFamily)
 	var procstatFamily *dto.MetricFamily
 	procstatFamily = newMetricFamily("procstat", "SumoLogic Compatibility", dto.MetricType_GAUGE)
 	families = append(families, procstatFamily)
+	totalProcesses := int64(0)
+	totalTags := make(map[string]string)
+	hostname, err := os.Hostname()
+	if err == nil {
+		totalTags["host.name"] = hostname
+	}
 	for searchStr, processes := range found {
+		totalProcesses += int64(len(processes))
 		//var totalMetrics []string
 		//totalTags := make(map[string][]*process.Process)
 		for _, p := range processes {
@@ -364,6 +371,10 @@ func executeCheck(event *corev2.Event) (int, error) {
 			}
 		}
 	}
+	totalTags["field"] = "total"
+	totalTags["units"] = "count"
+	gauge := newGaugeMetric(totalTags, float64(totalProcesses), nowMS)
+	processesFamily.Metric = append(processesFamily.Metric, gauge)
 
 	var buf bytes.Buffer
 	for _, family := range families {
