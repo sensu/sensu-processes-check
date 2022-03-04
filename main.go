@@ -204,6 +204,28 @@ func executeCheck(event *corev2.Event) (int, error) {
 			fval32, _ = p.MemoryPercent()
 			gauge = newGaugeMetric(procstatTags, float64(fval32), nowMS)
 			procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			mem, err := p.MemoryInfo()
+			if err == nil {
+				procstatTags["units"] = "bytes"
+				procstatTags["field"] = "memory_rss"
+				gauge = newGaugeMetric(procstatTags, float64(mem.RSS), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				procstatTags["field"] = "memory_vms"
+				gauge = newGaugeMetric(procstatTags, float64(mem.VMS), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				procstatTags["field"] = "memory_swap"
+				gauge = newGaugeMetric(procstatTags, float64(mem.Swap), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				procstatTags["field"] = "memory_data"
+				gauge = newGaugeMetric(procstatTags, float64(mem.Data), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				procstatTags["field"] = "memory_stack"
+				gauge = newGaugeMetric(procstatTags, float64(mem.Stack), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+				procstatTags["field"] = "memory_locked"
+				gauge = newGaugeMetric(procstatTags, float64(mem.Locked), nowMS)
+				procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+			}
 			//created_at metric
 			procstatTags["field"] = "created_at"
 			procstatTags["units"] = "nanoseconds"
@@ -283,28 +305,36 @@ func executeCheck(event *corev2.Event) (int, error) {
 			}
 			rlims, err := p.RlimitUsage(true)
 			if err == nil {
-				procstatTags["units"] = "N/A"
 				for _, rlim := range rlims {
+					procstatTags["units"] = "N/A"
 					var name string
 					switch rlim.Resource {
 					case process.RLIMIT_CPU:
 						name = "cpu_time"
 					case process.RLIMIT_DATA:
 						name = "memory_data"
+						procstatTags["units"] = "bytes"
 					case process.RLIMIT_STACK:
 						name = "memory_stack"
+						procstatTags["units"] = "bytes"
 					case process.RLIMIT_RSS:
 						name = "memory_rss"
+						procstatTags["units"] = "bytes"
 					case process.RLIMIT_NOFILE:
 						name = "num_fds"
+						procstatTags["units"] = "count"
 					case process.RLIMIT_MEMLOCK:
 						name = "memory_locked"
+						procstatTags["units"] = "bytes"
 					case process.RLIMIT_AS:
 						name = "memory_vms"
+						procstatTags["units"] = "bytes"
 					case process.RLIMIT_LOCKS:
 						name = "file_locks"
+						procstatTags["units"] = "count"
 					case process.RLIMIT_SIGPENDING:
 						name = "signals_pending"
+						procstatTags["units"] = "count"
 					case process.RLIMIT_NICE:
 						name = "nice_priority"
 					case process.RLIMIT_RTPRIO:
@@ -318,9 +348,18 @@ func executeCheck(event *corev2.Event) (int, error) {
 					procstatTags["field"] = "rlimit_" + name + "_hard"
 					gauge = newGaugeMetric(procstatTags, float64(rlim.Hard), nowMS)
 					procstatFamily.Metric = append(procstatFamily.Metric, gauge)
-					procstatTags["field"] = name
-					gauge = newGaugeMetric(procstatTags, float64(rlim.Used), nowMS)
-					procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+
+					switch rlim.Resource {
+					case process.RLIMIT_CPU,
+						process.RLIMIT_LOCKS,
+						process.RLIMIT_SIGPENDING,
+						process.RLIMIT_NICE,
+						process.RLIMIT_RTPRIO:
+						procstatTags["field"] = name
+						gauge = newGaugeMetric(procstatTags, float64(rlim.Used), nowMS)
+						procstatFamily.Metric = append(procstatFamily.Metric, gauge)
+					}
+
 				}
 			}
 		}
