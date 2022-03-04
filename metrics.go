@@ -27,17 +27,17 @@ func generateMetrics(found map[string][]*process.Process) error {
 	totalProcesses := int64(0)
 	totalThreads := int64(0)
 	totalStatusMap := map[string]int64{
-		"parked":     0,
-		"wait":       0,
-		"blocked":    0,
-		"zombies":    0,
-		"dead":       0,
-		"stopped":    0,
-		"running":    0,
-		"sleeping":   0,
-		"idle":       0,
-		"unknown":    0,
-		"unexpected": 0,
+		"parked":   0,
+		"wait":     0,
+		"blocked":  0,
+		"zombies":  0,
+		"dead":     0,
+		"stopped":  0,
+		"running":  0,
+		"sleeping": 0,
+		"idle":     0,
+		"unknown":  0,
+		"other":    0,
 	}
 	totalTags := make(map[string]string)
 	hostname, err := os.Hostname()
@@ -80,7 +80,7 @@ func generateMetrics(found map[string][]*process.Process) error {
 			case '?':
 				totalStatusMap["unknown"] += 1
 			default:
-				totalStatusMap["unexpected"] += 1
+				totalStatusMap["other"] += 1
 			}
 			metricTags := make(map[string]string)
 			//Set the labels for the metric
@@ -91,6 +91,7 @@ func generateMetrics(found map[string][]*process.Process) error {
 			metricTags["field"] = "none"
 			metricTags["search_string"] = searchStr
 			metricTags["process.executable.name"] = name
+			metricTags["process.executable.pid"] = string(p.Pid)
 
 			//cpu_usage metric
 			metricTags["field"] = "cpu_usage"
