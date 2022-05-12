@@ -82,8 +82,8 @@ func generateMetrics(found map[string][]*process.Process) error {
 			metricTags := make(map[string]string)
 			metricTags["field"] = "none"
 			metricTags["search_string"] = searchStr
-			metricTags["process.executable.name"] = name
-			metricTags["process.executable.pid"] = fmt.Sprintf("%v", (p.Pid))
+			metricTags["process_executable_name"] = name
+			metricTags["process_executable_pid"] = fmt.Sprintf("%v", (p.Pid))
 
 			//cpu_usage metric
 			metricTags["field"] = "cpu_usage"
