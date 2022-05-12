@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"sort"
 	"time"
 
@@ -38,10 +37,6 @@ func generateMetrics(found map[string][]*process.Process) error {
 		"other":    0,
 	}
 	totalTags := make(map[string]string)
-	hostname, err := os.Hostname()
-	if err == nil {
-		totalTags["host.name"] = hostname
-	}
 	for searchStr, processes := range found {
 		totalProcesses += int64(len(processes))
 		for _, p := range processes {
@@ -85,11 +80,6 @@ func generateMetrics(found map[string][]*process.Process) error {
 				}
 			}
 			metricTags := make(map[string]string)
-			//Set the labels for the metric
-			hostname, err := os.Hostname()
-			if err == nil {
-				metricTags["host.name"] = hostname
-			}
 			metricTags["field"] = "none"
 			metricTags["search_string"] = searchStr
 			metricTags["process.executable.name"] = name
@@ -263,7 +253,7 @@ func generateMetrics(found map[string][]*process.Process) error {
 		if len(family.Metric) > 0 {
 			buf.Reset()
 			encoder := expfmt.NewEncoder(&buf, expfmt.FmtText)
-			err = encoder.Encode(family)
+			err := encoder.Encode(family)
 			if err != nil {
 				return err
 			}

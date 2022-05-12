@@ -213,7 +213,7 @@ sensu-processes-check -s '[{"search_string": "sshd"}]'
 
 # HELP processes summary metrics
 # TYPE processes gauge
-processes{field="total",host.name="carbon",units="count"} 3 1646434587929
+processes{field="total",units="count"} 3 1646434587929
 ...
 
 ```
@@ -250,7 +250,7 @@ sensu-processes-check -s '[{"search_string": "/usr/sbin/sshd", "full_cmdline": t
 
 # HELP processes summary metrics
 # TYPE processes gauge
-processes{field="total",host.name="carbon",units="count"} 1 1646434588019
+processes{field="total",units="count"} 1 1646434588019
 ...
 
 ```
