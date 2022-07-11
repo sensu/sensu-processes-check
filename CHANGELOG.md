@@ -6,8 +6,14 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Sumo Logic Dashboard compatible metric output
 
 ### Changed
+- Allow for empty search configuration to match full process list
+- Added metrics only flag to disable search based alerts
+- Converted search alert text output into metric comment strings
+- Update to sensu plugin sdk 0.15.0
 - Changed types import to corev2
 - Minor README fix
 

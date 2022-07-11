@@ -6,11 +6,15 @@
 
 ## Table of Contents
 - [Overview](#overview)
+  - [Output Metrics](#output-metrics)
+    - [procstat](#procstat)
+    - [processes](#processes)
 - [Configuration](#configuration)
   - [Asset registration](#asset-registration)
   - [Check definition](#check-definition)
 - [Usage examples](#usage-examples)
   - [Help output](#help-output)
+  - [Environment variables](#environment-variables)
   - [Search string details](#search-string-details)
   - [Exit severity](#exit-severity)
   - [Annotations](#annotations)
@@ -19,11 +23,92 @@
 
 ## Overview
 
-The Sensu Processes Check is a [Sensu Check][1] that searches for certain
-running processes (or other strings in a command line).  It can search for
-multiple processes and, on a per-string basis, set the number of processes
-expected, severity if the number of processes is not met, and whether or not
-to search the full command line for the requested string.
+The Sensu Processes Check is a [Sensu Check][1] that provides metrics for
+processes found in the host process table.
+
+It can optionally restrict the list of processes considered,  using a [search configuration](#search-string-details) specifying multiple
+strings to match. The search configuration can also be used to set alert conditions based on the 
+number of matching processes on a per-string basis.
+
+### Output Metrics
+Metrics output conforms to the Prometheus exposition standard.
+
+#### procstat
+The `procstat` metric family provides individual per-process metrics for each process matching the configured search criteria.
+Each different per-process metric in this metric family is distinguished by the value of the label named `field`.
+Each metric is also labeled with `process_executable_name` and `process_executable_pid`  
+
+| Field                          | Units       | Description                         |
+|--------------------------------|-------------|-------------------------------------|
+| cpu_usage                      | percent     | percent of CPU time used by process
+| cpu_time                       | seconds     | total amount of time process has used
+| created_at                     | nanoseconds | process creation time since Unix epoch
+| memory_usage                   | percent     | percent of memory used by process 
+| memory_rss                     | bytes       | process resident set (the number of virtual pages resident in RAM 
+| memory_vms                     | bytes       | size of the process's virtual memory (address space)
+| memory_swap                    | bytes       | size of the process's swap 
+| memory_data                    | bytes       | size of the process's data segment (initialized data, uninitialized data, and heap
+| memory_stack                   | bytes       | size of the process stack
+| memory_locked                  | bytes       | size of memory locked into RAM
+| num_fds                        | count       | number of file descriptors opened by process
+| file_locks                     | count       | number of file locks held by process
+| num_threads                    | count       | number of process threads
+| read_count                     | count       | number or read operations performed
+| read_bytes                     | bytes       | bytes read
+| write_count                    | count       | number of write operations performed
+| writebytes                     | bytes       | bytes written
+| major_faults                   | count       | The number of major faults the process has made which have required loading a memory page from disk.
+| minor_faults                   | count       | The number of minor faults the process has made which have not required loading a memory page from disk.
+| child_major_faults             | count       | The number of major faults that the process's waited-for children have made.
+| child_minor_faults             | count       | The number of minor faults that the process's waited-for children have made.
+| signals_pending                | count       | number of currently queued signals
+| nice_priority                  | N/A         | nice priority
+| realtime_priority              | N/A         | realtime priority
+| voluntary_context_switches     | count       | number of voluntary context switches
+| involuntary_context_switches   | count       | number of involuntary context switches
+| rlimit_cpu_time_soft           | seconds     | soft maximum limit for cpu_time
+| rlimit_cpu_time_hard           | seconds     | hard maximum limit for cpu_time
+| rlimit_core_size_soft          | bytes       | ...
+| rlimit_core_size_hard          | bytes       | ... 
+| rlimit_memory_data_soft        | bytes       | ...
+| rlimit_memory_data_hard        | bytes       | ...
+| rlimit_memory_stack_soft       | bytes       | ... 
+| rlimit_memory_stack_hard       | bytes       | ...
+| rlimit_memory_rss_soft         | bytes       | ...
+| rlimit_memory_rss_hard         | bytes       | ...
+| rlimit_num_fds_soft            | count       | ...
+| rlimit_num_fds_hard            | count       | ...
+| rlimit_memory_locked_soft      | bytes       | ...
+| rlimit_memory_locked_hard      | bytes       | ...
+| rlimit_memory_vms_soft         | bytes       | ...
+| rlimit_memory_vms_hard         | bytes       | ...
+| rlimit_file_locks_soft         | bytes       | ...
+| rlimit_file_locks_hard         | bytes       | ...
+| rlimit_signals_pending_soft    | count       | ...
+| rlimit_signals_pending_hard    | count       | ...
+| rlimit_nice_priority_soft      | count       | ...
+| rlimit_nice_priority_hard      | count       | ...
+| rlimit_realtime_priority_soft  | count       | ...
+| rlimit_realtime_priority_hard  | count       | ...
+
+#### processes
+The `processes` metric family provides summary metrics derived from the list of processes matching the configured search criteria.
+Each different metric in this metric family is distinguished by the value of the label named `field`.
+
+| Field             | Units | Description                         |
+|-------------------|-------|-------------------------------------|
+| total             | count | total number of processes tabulated |
+| total_threads     | count | total number of threads
+| sleeping          | count | number of processes in sleeping state
+| unknown           | count | number of processes in unknown state
+| parked            | count | number of processes in parked state
+| blocked           | count | number of processes in blocked state
+| zombies           | count | number of processes in zombie state
+| stopped           | count | number of processes in stopped state
+| running           | count | number of processes in running state
+| wait              | count | number of processes in wait state
+| dead              | count | number of processes in dead state
+| idle              | count | number of processes in idle state
 
 ## Configuration
 
@@ -76,11 +161,23 @@ Available Commands:
 
 Flags:
   -h, --help                 help for sensu-processes-check
+      --metrics-only         Do not alert based on search configuration
   -s, --search string        An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"
   -S, --suppress-ok-output   Aside from overal status, only output failures
+  -v, --verbose              Verbose output
 
 Use "sensu-processes-check [command] --help" for more information about a command.
+
 ```
+
+### Environment variables
+
+| Argument             | Environment Variable               |
+|----------------------|------------------------------------|
+| --metrics-only       | PROCESSES_CHECK_METRICS_ONLY       |
+| --search             | PROCESSES_CHECK_SEARCH             |
+| --suppress-ok-output | PROCESSES_CHECK_SUPPRESS_OK_OUTPUT |
+| --verbose            | PROCESSES_CHECK_SUMOLOGIC_VERBOSE  |
 
 ### Search string details
 
@@ -106,8 +203,19 @@ is running on a Linux server, the following output may be produced:
 
 ```
 sensu-processes-check -s '[{"search_string": "sshd"}]'
-OK       | 3 >= 1 (found >= required) evaluated true for "sshd"
-Status - OK
+# OK       | 3 >= 1 (found >= required) evaluated true for "sshd"
+# Status - OK
+
+# HELP procstat per-process metrics
+# TYPE procstat gauge
+
+...
+
+# HELP processes summary metrics
+# TYPE processes gauge
+processes{field="total",units="count"} 3 1646434587929
+...
+
 ```
 
 If you compare the output of `ps -e` and `ps -ef` you will see the 3 matches it
@@ -132,8 +240,19 @@ and set `search_string` to `/usr/sbin/sshd`.
 
 ```
 sensu-processes-check -s '[{"search_string": "/usr/sbin/sshd", "full_cmdline": true}]'
-OK       | 1 >= 1 (found >= required) evaluated true for "/usr/sbin/sshd"
-Status - OK
+# OK       | 1 >= 1 (found >= required) evaluated true for "/usr/sbin/sshd"
+# Status - OK
+
+# HELP procstat per-process metrics
+# TYPE procstat gauge
+
+...
+
+# HELP processes summary metrics
+# TYPE processes gauge
+processes{field="total",units="count"} 1 1646434588019
+...
+
 ```
 
 #### Supported comparisons
