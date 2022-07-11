@@ -40,8 +40,8 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
-		{
+	options = []sensu.ConfigOption{
+		&sensu.PluginConfigOption[string]{
 			Path:      "search",
 			Env:       "PROCESSES_CHECK_SEARCH",
 			Argument:  "search",
@@ -50,7 +50,7 @@ var (
 			Usage:     `An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"`,
 			Value:     &plugin.Search,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "suppress-ok-output",
 			Env:       "PROCESSES_CHECK_SUPPRESS_OK_OUTPUT",
 			Argument:  "suppress-ok-output",
@@ -59,7 +59,7 @@ var (
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "metrics-only",
 			Env:       "PROCESSES_CHECK_METRICS_ONLY",
 			Argument:  "metrics-only",
@@ -69,17 +69,17 @@ var (
 			Value:     &plugin.MetricsOnly,
 		},
 		/*
-			{
-				Path:      "sumologic-compat",
-				Env:       "PROCESSES_CHECK_SUMOLOGIC_COMPAT",
-				Argument:  "sumologic-compat",
-				Shorthand: "",
-				Default:   false,
-				Usage:     "Add Sumo Logic compatible \"procstat\" metrics family",
-				Value:     &plugin.SumoLogicCompat,
-			},
+			&sensu.PluginConfigOption[bool]{
+					Path:      "sumologic-compat",
+					Env:       "PROCESSES_CHECK_SUMOLOGIC_COMPAT",
+					Argument:  "sumologic-compat",
+					Shorthand: "",
+					Default:   false,
+					Usage:     "Add Sumo Logic compatible \"procstat\" metrics family",
+					Value:     &plugin.SumoLogicCompat,
+				},
 		*/
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "verbose",
 			Env:       "PROCESSES_CHECK_SUMOLOGIC_VERBOSE",
 			Argument:  "verbose",
