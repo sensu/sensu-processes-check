@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
+	"regexp"
 
 	"github.com/Knetic/govaluate"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
@@ -96,7 +96,8 @@ func executeCheck(event *corev2.Event) (int, error) {
 				found[search.SearchString]++
 				break
 			} else if search.FullCmdLine {
-				if strings.Contains(cmdline, search.SearchString) {
+				match, _ := regexp.MatchString(search.SearchString, cmdline)
+				if match {
 					found[search.SearchString]++
 					break
 				}
