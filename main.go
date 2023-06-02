@@ -26,6 +26,7 @@ type Config struct {
 	sensu.PluginConfig
 	Search           string
 	SuppressOKOutput bool
+	Zombie           bool
 }
 
 var (
@@ -56,6 +57,15 @@ var (
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
+		{
+			Path:      "zombie",
+			Env:       "",
+			Argument:  "zombie",
+			Shorthand: "z",
+			Default:   false,
+			Usage:     "Check for zombie processes",
+			Value:     &plugin.Zombie,
+		},
 	}
 )
 
@@ -80,13 +90,23 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	myPid := os.Getpid()
 	processes, _ := process.Processes()
-	for _, process := range processes {
+	for _, proc := range processes {
 		// Skip myself
-		if process.Pid == int32(myPid) {
+		if proc.Pid == int32(myPid) {
 			continue
 		}
-		name, _ := process.Name()
-		cmdline, _ := process.Cmdline()
+
+		// Check for zombie processes if --zombie or -z flag is set
+		if plugin.Zombie {
+			status, _ := proc.Status()
+			if status == "Z" { // "Z" status is for Zombie processes
+				fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
+				return sensu.CheckStateCritical, nil
+			}
+		}
+
+		name, _ := proc.Name()
+		cmdline, _ := proc.Cmdline()
 		for _, search := range searches {
 			// skip empty search string, should this be tunable?
 			if len(search.SearchString) == 0 {
