@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
-	github.com/sensu/sensu-go/api/core/v2 v2.16.0
+	github.com/sensu/core/v2 v2.19.0
 	github.com/sensu/sensu-plugin-sdk v0.18.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.8.4
@@ -30,7 +30,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robertkrimen/otto v0.0.0-20221006114523-201ab5b34f52 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	github.com/sensu/core/v2 v2.16.1 // indirect
 	github.com/sensu/sensu-api-tools v0.1.0 // indirect
 	github.com/sensu/sensu-licensing/v2 v2.2.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
