@@ -39,7 +39,7 @@ var (
 	}
 
 	options = []sensu.ConfigOption{
-		&sensu.PluginConfigOption[string]{{
+		&sensu.PluginConfigOption[string]{
 			Path:      "search",
 			Env:       "",
 			Argument:  "search",
@@ -48,7 +48,7 @@ var (
 			Usage:     `An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"`,
 			Value:     &plugin.Search,
 		},
-		&sensu.PluginConfigOption[bool]{{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "suppress-ok-output",
 			Env:       "",
 			Argument:  "suppress-ok-output",
@@ -57,7 +57,7 @@ var (
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
-		&sensu.PluginConfigOption[bool]{{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "zombie",
 			Env:       "",
 			Argument:  "zombie",
