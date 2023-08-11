@@ -9,7 +9,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/sensu-community/sensu-plugin-sdk v0.11.0
 	github.com/sensu/sensu-go/api/core/v2 v2.3.0
-	github.com/shirou/gopsutil v3.23.7+incompatible
+	github.com/shirou/gopsutil/v3 v3.23.7
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
