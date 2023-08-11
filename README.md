@@ -77,7 +77,9 @@ Available Commands:
 Flags:
   -h, --help                 help for sensu-processes-check
   -s, --search string        An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"
-  -S, --suppress-ok-output   Aside from overal status, only output failures
+  -S, --suppress-ok-output   Aside from overall status, only output failures
+  -z, --zombie               Fail if the process is in a zombie state
+
 
 Use "sensu-processes-check [command] --help" for more information about a command.
 ```
