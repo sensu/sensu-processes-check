@@ -1,6 +1,6 @@
 module github.com/sensu/sensu-processes-check
 
-go 1.14
+go 1.20
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
@@ -9,7 +9,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/sensu-community/sensu-plugin-sdk v0.11.0
 	github.com/sensu/sensu-go/api/core/v2 v2.3.0
-	github.com/shirou/gopsutil v3.20.10+incompatible
+	github.com/shirou/gopsutil v3.23.7+incompatible
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
