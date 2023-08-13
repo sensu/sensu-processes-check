@@ -138,11 +138,11 @@ func executeCheck(event *corev2.Event) (int, error) {
 		strExpr := fmt.Sprintf("%d %s %d", found[search.SearchString], search.Comparison, search.Number)
 		expression, err := govaluate.NewEvaluableExpression(strExpr)
 		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to create expression %s: %v", strExpr, err)
+			return sensu.CheckStateCritical, fmt.Errorf("unable to create expression %s: %v", strExpr, err)
 		}
 		result, err := expression.Evaluate(nil)
 		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to evalute expression %s: %v", strExpr, err)
+			return sensu.CheckStateCritical, fmt.Errorf("unable to evalute expression %s: %v", strExpr, err)
 		}
 
 		if !result.(bool) && overallSeverity < search.Severity {
