@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/Knetic/govaluate"
-	"github.com/sensu-community/sensu-plugin-sdk/sensu"
-	corev2 "github.com/sensu/sensu-go/api/core/v2"
-	"github.com/shirou/gopsutil/process"
+	corev2 "github.com/sensu/core/v2"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 type Search struct {
@@ -22,6 +22,7 @@ type Search struct {
 }
 
 // Config represents the check plugin config.
+// https://github.com/sensu/sensu-plugin-sdk
 type Config struct {
 	sensu.PluginConfig
 	Search           string
@@ -38,8 +39,10 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
-		{
+	options = []sensu.ConfigOption{
+		// TODO: There should be a way to access the type from the struct directly
+		// instead of re-defining it here
+		&sensu.PluginConfigOption[string]{
 			Path:      "search",
 			Env:       "",
 			Argument:  "search",
@@ -48,7 +51,7 @@ var (
 			Usage:     `An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"`,
 			Value:     &plugin.Search,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "suppress-ok-output",
 			Env:       "",
 			Argument:  "suppress-ok-output",
@@ -57,7 +60,7 @@ var (
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "zombie",
 			Env:       "",
 			Argument:  "zombie",
@@ -99,7 +102,8 @@ func executeCheck(event *corev2.Event) (int, error) {
 		// Check for zombie processes if --zombie or -z flag is set
 		if plugin.Zombie {
 			status, _ := proc.Status()
-			if status == "Z" { // "Z" status is for Zombie processes
+			// gopsutil/v3 now returns a slice for process.Status()
+			if stringInSlice("Z", status) { // "Z" status is for Zombie processes
 				fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
 				return sensu.CheckStateCritical, nil
 			}
@@ -195,4 +199,13 @@ func (s *Search) UnmarshalJSON(data []byte) error {
 
 	*s = Search(*search)
 	return nil
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
