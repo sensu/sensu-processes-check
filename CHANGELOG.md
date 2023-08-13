@@ -6,13 +6,14 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-## [0.3.2] - 2023-08-11
+## [0.3.4] - 2023-08-13
 
 ### Changed
 - Changed types import to corev2
 - Minor README fix
 - Bumped github actions versions
 - Updated gopsutil version
+- Updated the zombie check to support the lastest version of gopsutil process.Status
 
 ## [0.2.0] - 2020-11-09
 
