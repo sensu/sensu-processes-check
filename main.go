@@ -99,16 +99,6 @@ func executeCheck(event *corev2.Event) (int, error) {
 			continue
 		}
 
-		// Check for zombie processes if --zombie or -z flag is set
-		if plugin.Zombie {
-			status, _ := proc.Status()
-			// gopsutil/v3 now returns a slice for process.Status()
-			if stringInSlice("Z", status) { // "Z" status is for Zombie processes
-				fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
-				return sensu.CheckStateCritical, nil
-			}
-		}
-
 		name, _ := proc.Name()
 		cmdline, _ := proc.Cmdline()
 		for _, search := range searches {
@@ -128,6 +118,16 @@ func executeCheck(event *corev2.Event) (int, error) {
 		}
 	}
 
+	// Check for zombie processes if --zombie or -z flag is set
+	if plugin.Zombie {
+		status, _ := proc.Status()
+		// gopsutil/v3 now returns a slice for process.Status()
+		if stringInSlice("Z", status) { // "Z" status is for Zombie processes
+			fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
+			return sensu.CheckStateCritical, nil
+		}
+	}
+	
 	overallSeverity := 0
 	for _, search := range searches {
 		// skip empty search string, should this be tunable?
