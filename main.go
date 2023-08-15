@@ -108,25 +108,31 @@ func executeCheck(event *corev2.Event) (int, error) {
 			}
 			if !search.FullCmdLine && name == search.SearchString {
 				found[search.SearchString]++
+				if plugin.Zombie && zombieCheck(proc) {
+					return sensu.CheckStateCritical, nil
+				}
 				break
 			} else if search.FullCmdLine {
 				if strings.Contains(cmdline, search.SearchString) {
 					found[search.SearchString]++
+					if plugin.Zombie && zombieCheck(proc) {
+						return sensu.CheckStateCritical, nil
+					}
 					break
 				}
 			}
 		}
 	}
 
-	// Check for zombie processes if --zombie or -z flag is set
-	if plugin.Zombie {
-		status, _ := proc.Status()
-		// gopsutil/v3 now returns a slice for process.Status()
-		if stringInSlice("Z", status) { // "Z" status is for Zombie processes
-			fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
-			return sensu.CheckStateCritical, nil
-		}
-	}
+	// // Check for zombie processes if --zombie or -z flag is set
+	// if plugin.Zombie {
+	// 	status, _ := proc.Status()
+	// 	// gopsutil/v3 now returns a slice for process.Status()
+	// 	if stringInSlice("Z", status) { // "Z" status is for Zombie processes
+	// 		fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
+	// 		return sensu.CheckStateCritical, nil
+	// 	}
+	// }
 	
 	overallSeverity := 0
 	for _, search := range searches {
@@ -160,6 +166,19 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	fmt.Printf("Status - %s\n", mapSeverity(overallSeverity))
 	return overallSeverity, nil
+}
+
+func zombieCheck(proc *process.Process) bool {
+	// Check for zombie processes if --zombie or -z flag is set
+		status, _ := proc.Status()
+		// gopsutil/v3 now returns a slice for process.Status()
+		if stringInSlice("Z", status) { // "Z" status is for Zombie processes
+			fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
+			return true
+		}
+
+		return false
+
 }
 
 func parseSearches(searchJSON string) ([]Search, error) {
