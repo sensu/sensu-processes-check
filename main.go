@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/Knetic/govaluate"
-	"github.com/sensu-community/sensu-plugin-sdk/sensu"
-	corev2 "github.com/sensu/sensu-go/api/core/v2"
-	"github.com/shirou/gopsutil/process"
+	corev2 "github.com/sensu/core/v2"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 type Search struct {
@@ -22,6 +22,7 @@ type Search struct {
 }
 
 // Config represents the check plugin config.
+// https://github.com/sensu/sensu-plugin-sdk
 type Config struct {
 	sensu.PluginConfig
 	Search           string
@@ -38,8 +39,10 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
-		{
+	options = []sensu.ConfigOption{
+		// TODO: There should be a way to access the type from the struct directly
+		// instead of re-defining it here
+		&sensu.PluginConfigOption[string]{
 			Path:      "search",
 			Env:       "",
 			Argument:  "search",
@@ -48,7 +51,7 @@ var (
 			Usage:     `An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"`,
 			Value:     &plugin.Search,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "suppress-ok-output",
 			Env:       "",
 			Argument:  "suppress-ok-output",
@@ -57,7 +60,7 @@ var (
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "zombie",
 			Env:       "",
 			Argument:  "zombie",
@@ -96,15 +99,6 @@ func executeCheck(event *corev2.Event) (int, error) {
 			continue
 		}
 
-		// Check for zombie processes if --zombie or -z flag is set
-		if plugin.Zombie {
-			status, _ := proc.Status()
-			if status == "Z" { // "Z" status is for Zombie processes
-				fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
-				return sensu.CheckStateCritical, nil
-			}
-		}
-
 		name, _ := proc.Name()
 		cmdline, _ := proc.Cmdline()
 		for _, search := range searches {
@@ -114,16 +108,32 @@ func executeCheck(event *corev2.Event) (int, error) {
 			}
 			if !search.FullCmdLine && name == search.SearchString {
 				found[search.SearchString]++
+				if plugin.Zombie && zombieCheck(proc) {
+					return sensu.CheckStateCritical, nil
+				}
 				break
 			} else if search.FullCmdLine {
 				if strings.Contains(cmdline, search.SearchString) {
 					found[search.SearchString]++
+					if plugin.Zombie && zombieCheck(proc) {
+						return sensu.CheckStateCritical, nil
+					}
 					break
 				}
 			}
 		}
 	}
 
+	// // Check for zombie processes if --zombie or -z flag is set
+	// if plugin.Zombie {
+	// 	status, _ := proc.Status()
+	// 	// gopsutil/v3 now returns a slice for process.Status()
+	// 	if stringInSlice("Z", status) { // "Z" status is for Zombie processes
+	// 		fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
+	// 		return sensu.CheckStateCritical, nil
+	// 	}
+	// }
+	
 	overallSeverity := 0
 	for _, search := range searches {
 		// skip empty search string, should this be tunable?
@@ -134,11 +144,11 @@ func executeCheck(event *corev2.Event) (int, error) {
 		strExpr := fmt.Sprintf("%d %s %d", found[search.SearchString], search.Comparison, search.Number)
 		expression, err := govaluate.NewEvaluableExpression(strExpr)
 		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to create expression %s: %v", strExpr, err)
+			return sensu.CheckStateCritical, fmt.Errorf("unable to create expression %s: %v", strExpr, err)
 		}
 		result, err := expression.Evaluate(nil)
 		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to evalute expression %s: %v", strExpr, err)
+			return sensu.CheckStateCritical, fmt.Errorf("unable to evalute expression %s: %v", strExpr, err)
 		}
 
 		if !result.(bool) && overallSeverity < search.Severity {
@@ -156,6 +166,19 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	fmt.Printf("Status - %s\n", mapSeverity(overallSeverity))
 	return overallSeverity, nil
+}
+
+func zombieCheck(proc *process.Process) bool {
+	// Check for zombie processes if --zombie or -z flag is set
+		status, _ := proc.Status()
+		// gopsutil/v3 now returns a slice for process.Status()
+		if stringInSlice("Z", status) { // "Z" status is for Zombie processes
+			fmt.Printf("Zombie process found with PID: %d\n", proc.Pid)
+			return true
+		}
+
+		return false
+
 }
 
 func parseSearches(searchJSON string) ([]Search, error) {
@@ -195,4 +218,13 @@ func (s *Search) UnmarshalJSON(data []byte) error {
 
 	*s = Search(*search)
 	return nil
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
