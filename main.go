@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/Knetic/govaluate"
-	"github.com/sensu-community/sensu-plugin-sdk/sensu"
-	corev2 "github.com/sensu/sensu-go/api/core/v2"
+	corev2 "github.com/sensu/core/v2"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
 	"github.com/shirou/gopsutil/process"
 )
 
@@ -38,8 +38,8 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
-		{
+	options = []sensu.ConfigOption{
+		&sensu.PluginConfigOption[string]{
 			Path:      "search",
 			Env:       "",
 			Argument:  "search",
@@ -48,7 +48,7 @@ var (
 			Usage:     `An array of JSON search criteria, fields are "search_string", "severity", "number", "comparison", and "full_cmdline"`,
 			Value:     &plugin.Search,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "suppress-ok-output",
 			Env:       "",
 			Argument:  "suppress-ok-output",
@@ -57,7 +57,7 @@ var (
 			Usage:     "Aside from overal status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "zombie",
 			Env:       "",
 			Argument:  "zombie",
@@ -70,7 +70,7 @@ var (
 )
 
 func main() {
-	check := sensu.NewGoCheck(&plugin.PluginConfig, options, checkArgs, executeCheck, false)
+	check := sensu.NewCheck(&plugin.PluginConfig, options, checkArgs, executeCheck, false)
 	check.Execute()
 }
 
@@ -134,11 +134,11 @@ func executeCheck(event *corev2.Event) (int, error) {
 		strExpr := fmt.Sprintf("%d %s %d", found[search.SearchString], search.Comparison, search.Number)
 		expression, err := govaluate.NewEvaluableExpression(strExpr)
 		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to create expression %s: %v", strExpr, err)
+			return sensu.CheckStateCritical, fmt.Errorf("unable to create expression %s: %v", strExpr, err)
 		}
 		result, err := expression.Evaluate(nil)
 		if err != nil {
-			return sensu.CheckStateCritical, fmt.Errorf("Unable to evalute expression %s: %v", strExpr, err)
+			return sensu.CheckStateCritical, fmt.Errorf("unable to evalute expression %s: %v", strExpr, err)
 		}
 
 		if !result.(bool) && overallSeverity < search.Severity {
